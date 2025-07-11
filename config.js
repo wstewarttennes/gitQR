@@ -7,19 +7,19 @@
 
 const config = {
   // Your full name
-  name: "Your Name",
+  name: "Weston Stewart-Tennes",
   
   // Your professional title
-  title: "PhD Candidate",
+  title: "CTO",
   
   // Your email address
-  email: "your.email@example.com",
+  email: "wstewarttennes@gmail.com",
   
   // Your phone number (optional - leave empty to hide)
-  phone: "+1 (555) 123-4567",
+  phone: "+1 (510) 219 4402",
   
   // Your GitHub username (without the @ symbol)
-  githubUsername: "yourusername"
+  githubUsername: "wstewarttennes"
 };
 
 // ================================================================
