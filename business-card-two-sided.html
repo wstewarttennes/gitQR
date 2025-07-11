@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Sided Business Card Generator</title>
+    
+    <!-- Playfair Display & Source Sans Pro Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Source+Sans+3:wght@300;400&display=swap" rel="stylesheet">
+    
+    <!-- QR Code Generator Library with styling support -->
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        
+        /* Control panel */
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls h1 {
+            margin-bottom: 20px;
+            color: #24292f;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #24292f;
+        }
+        
+        .control-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d9e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #2ea44f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #2c974b;
+        }
+        
+        .print-button {
+            background-color: #0969da;
+        }
+        
+        .print-button:hover {
+            background-color: #0860ca;
+        }
+        
+        /* Print preview area */
+        .preview-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .preview-container h2 {
+            margin-bottom: 15px;
+            color: #24292f;
+        }
+        
+        /* Business card container */
+        .business-card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        /* Business card styles - Standard US size: 3.5" x 2" */
+        .business-card {
+            width: 3.5in;
+            height: 2in;
+            border: 1px solid #d8dee4;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Front side - text content */
+        .card-front {
+            background: #FDFCFA;
+            padding: 0.4in;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 16pt;
+            font-weight: 400;
+            color: #1a1a1a;
+            margin-bottom: 8pt;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+        }
+        
+        .card-title {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 10pt;
+            font-weight: 300;
+            color: #666;
+            margin-bottom: 20pt;
+            line-height: 1.3;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        .card-email {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 10pt;
+            font-weight: 300;
+            color: #333;
+            line-height: 1.4;
+            letter-spacing: 0.02em;
+        }
+        
+        /* Back side - QR code */
+        .card-back {
+            background: #FDFCFA;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .qr-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-code-container {
+            width: 140px;
+            height: 140px;
+            position: relative;
+        }
+        
+        .follow-section {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .follow-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 20px;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid;
+            border-radius: 6px;
+            appearance: none;
+            text-decoration: none;
+            background-color: #f6f8fa;
+            border-color: rgba(27, 31, 35, 0.15);
+            color: #24292e;
+            transition: background-color 0.2s;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+        
+        .follow-button:hover {
+            background-color: #f3f4f6;
+            border-color: rgba(27, 31, 35, 0.2);
+        }
+        
+        .follow-button svg {
+            margin-right: 6px;
+            fill: currentColor;
+        }
+        
+        /* QR code canvas styling */
+        .qr-code-container canvas {
+            display: block;
+        }
+        
+        /* Side labels */
+        .side-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: #fff8dc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid #ffe4b5;
+        }
+        
+        .instructions h3 {
+            color: #8b6914;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            color: #8b6914;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .controls,
+            .preview-container h2,
+            .instructions,
+            button,
+            .side-label {
+                display: none !important;
+            }
+            
+            .preview-container {
+                background: none;
+                padding: 0;
+                box-shadow: none;
+            }
+            
+            .business-card-container {
+                display: block;
+            }
+            
+            .business-card {
+                margin: 0;
+                page-break-inside: avoid;
+                page-break-after: always;
+            }
+            
+            /* Ensure exact dimensions for print */
+            @page {
+                size: 3.5in 2in;
+                margin: 0;
+            }
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: none;
+            color: #57606a;
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h1>Two-Sided Business Card Generator</h1>
+        
+        <div class="control-group">
+            <label for="github-url">GitHub Pages URL:</label>
+            <input type="text" id="github-url" placeholder="https://username.github.io/repository/" value="">
+        </div>
+        
+        <h3 style="margin-top: 30px; margin-bottom: 15px; color: #24292f;">QR Code Customization</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <button onclick="setWhiteTheme()" style="margin-right: 10px; background-color: white; color: #24292f; border: 1px solid #d1d9e0;">White Background</button>
+            <button onclick="setBlackTheme()" style="background-color: #1a1a1a; color: white; border: 1px solid #1a1a1a;">Black Background</button>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="control-group">
+                <label for="qr-color">QR Code Color:</label>
+                <input type="color" id="qr-color" value="#24292f">
+            </div>
+            
+            <div class="control-group">
+                <label for="qr-bg-color">Background Color:</label>
+                <input type="color" id="qr-bg-color" value="#FDFCFA">
+            </div>
+            
+            <div class="control-group">
+                <label for="dot-style">Dot Style:</label>
+                <select id="dot-style">
+                    <option value="rounded">Rounded</option>
+                    <option value="dots">Dots</option>
+                    <option value="classy">Classy</option>
+                    <option value="classy-rounded">Classy Rounded</option>
+                    <option value="square">Square</option>
+                    <option value="extra-rounded">Extra Rounded</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="corner-style">Corner Style:</label>
+                <select id="corner-style">
+                    <option value="extra-rounded">Extra Rounded</option>
+                    <option value="square">Square</option>
+                    <option value="dot">Dot</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="corner-dot-style">Corner Dot Style:</label>
+                <select id="corner-dot-style">
+                    <option value="dot">Dot</option>
+                    <option value="square">Square</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="show-logo">Show GitHub Logo:</label>
+                <input type="checkbox" id="show-logo" checked style="width: auto; margin-right: 10px;">
+            </div>
+        </div>
+        
+        <button onclick="generateCard()" style="margin-top: 20px;">Generate Business Card</button>
+        <button class="print-button" onclick="window.print()">Print Business Cards</button>
+        
+        <div class="loading" id="loading">Generating QR code...</div>
+    </div>
+    
+    <div class="preview-container">
+        <h2>Business Card Preview</h2>
+        <div class="business-card-container" id="card-container">
+            <!-- Cards will be generated here -->
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>Printing Instructions:</h3>
+        <ul>
+            <li>Card dimensions: 3.5" × 2" (standard US business card size)</li>
+            <li>Print on heavy cardstock (14pt or 16pt recommended)</li>
+            <li>For double-sided printing: Print odd pages first, then even pages on reverse</li>
+            <li>Set printer to "Actual Size" or "100%" (no scaling)</li>
+            <li>Use "High Quality" print settings for best results</li>
+            <li>Cut cards carefully along the borders</li>
+        </ul>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Auto-populate the URL field if we're on GitHub Pages
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('github-url');
+            
+            // Try to auto-detect the GitHub Pages URL
+            if (window.location.hostname.includes('github.io')) {
+                urlInput.value = window.location.href.replace(/\/[^\/]*$/, '/');
+            } else {
+                // Use the username from config to suggest a URL
+                urlInput.value = `https://${config.githubUsername}.github.io/gitQR/`;
+            }
+        });
+        
+        function setWhiteTheme() {
+            document.getElementById('qr-color').value = '#24292f';
+            document.getElementById('qr-bg-color').value = '#ffffff';
+            generateCard();
+        }
+        
+        function setBlackTheme() {
+            document.getElementById('qr-color').value = '#ffffff';
+            document.getElementById('qr-bg-color').value = '#1a1a1a';
+            generateCard();
+        }
+        
+        function generateCard() {
+            const url = document.getElementById('github-url').value;
+            if (!url) {
+                alert('Please enter your GitHub Pages URL');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
+            const cardContainer = document.getElementById('card-container');
+            cardContainer.innerHTML = '';
+            
+            // Create front side card
+            const frontCard = document.createElement('div');
+            frontCard.className = 'business-card';
+            
+            const front = document.createElement('div');
+            front.className = 'card-front';
+            front.innerHTML = `
+                <div class="card-name">${config.name}</div>
+                <div class="card-title">${config.title}</div>
+                <div class="card-email">${config.email}</div>
+            `;
+            
+            frontCard.appendChild(front);
+            
+            // Create front label
+            const frontLabel = document.createElement('div');
+            frontLabel.className = 'side-label';
+            frontLabel.textContent = 'Front';
+            
+            const frontWrapper = document.createElement('div');
+            frontWrapper.appendChild(frontCard);
+            frontWrapper.appendChild(frontLabel);
+            
+            // Create back side card
+            const backCard = document.createElement('div');
+            backCard.className = 'business-card';
+            
+            const back = document.createElement('div');
+            back.className = 'card-back';
+            back.style.backgroundColor = bgColor;
+            
+            const qrWrapper = document.createElement('div');
+            qrWrapper.className = 'qr-wrapper';
+            
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'qr-code-container';
+            
+            // Get customization values
+            const qrColor = document.getElementById('qr-color').value;
+            const bgColor = document.getElementById('qr-bg-color').value;
+            const dotStyle = document.getElementById('dot-style').value;
+            const cornerStyle = document.getElementById('corner-style').value;
+            const cornerDotStyle = document.getElementById('corner-dot-style').value;
+            const showLogo = document.getElementById('show-logo').checked;
+            
+            // Generate styled QR code with rounded corners
+            const qrCodeConfig = {
+                width: 140,
+                height: 140,
+                type: "canvas",
+                data: url,
+                dotsOptions: {
+                    color: qrColor,
+                    type: dotStyle
+                },
+                cornersSquareOptions: {
+                    color: qrColor,
+                    type: cornerStyle
+                },
+                cornersDotOptions: {
+                    color: qrColor,
+                    type: cornerDotStyle
+                },
+                backgroundOptions: {
+                    color: bgColor,
+                },
+                imageOptions: {
+                    crossOrigin: "anonymous",
+                    margin: 0,
+                    imageSize: 0.35
+                }
+            };
+            
+            // Add GitHub logo if enabled
+            if (showLogo) {
+                // GitHub logo as base64 data URI
+                qrCodeConfig.image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpFNTE3OEEyQTk5QTAxMUUyOUExNUJDMTA0NkE4OTA0RCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpFNTE3OEEyQjk5QTAxMUUyOUExNUJDMTA0NkE4OTA0RCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkU1MTc4QTI4OTlBMDExRTI5QTE1QkMxMDQ2QTg5MDREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkU1MTc4QTI5OTlBMDExRTI5QTE1QkMxMDQ2QTg5MDREIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+m4QGuQAAAyRJREFUeNrsm21ojWEYx895TDPbMNlBK46IUiNmPvHBSUjaqc0H8pF5+aDUKPEBqU2NhRQpX5Rv5jWlDIWlMCv7MMSWsWwmb3tpXub4XXWdPHvc9/Gc41nu+nedc7/8r/99PffLdU4SpSmLR0MPsgkFYH5wvp31/7WnQ1myICnipGV7QBvT2QRIj1XTogXJP1AJcDG1QcGQuhPefUOmUguK6DOJKwu/NjoQxVoEKIhQgJeEzgmF0JBqQZa7RyHXAqgJ/oC+R1trwo6/pixGMTcBXGqpHXF/lFbZGkoLoA0FygmjYGfHSgJJm7HGrwXo5FMbrH2cDT4AzYnSBR8zSvI8cIs44Q4EyDAqDOD4YDxiLk3K36DFrQTQ2MBGpgLCymHQHWmZ/vHqKgUEGF1aIGRycnQr6UvRNUFI5gwhQAWQF+4JTEpNAHTJzQJokbpP6Bj1hlNNPU3n0iXTF1FU+iz7rlPrTdHXCJQEWg71Dld6CamJfAolAZbHgEWJmomUK0BfWZpH8K+REGwJKE/EmUzWMt/8V44AyRXjSwmULgB1cmklGz8ECK0G4gx/ci8y7u0LOri9Cw7p3aQtQYFztqIJqEWkfQCtKV5g1Km6b1v6O5DafEjRBVq8MJbVEelSjZDbElAa8CXDV7JViZqNcPIBcYO2If9SdRBrPKhetzL+ZJJE0PSUPM5D8LmH5W7OJDnxPABvLIJVGA54NKCL77LOKCQXQUtBwqV9+YBqeNbHzPfIvLtLHbFmPaZCJCptX4fwJPmYKXlgwvXZ1YCvALkLi0q5XeGnFAzGCzLCfBhg8huCII0Jq2FbBYLEDYosAy47LxZAzRxb5KEA5nqQPixkb2+r7bzeI2O5kBAGQCLCPpGgKjS4/I6MhHODht5B14ODgUZq4bjlYoEsw6c5EHSAHDCVIzDHQYQBTO+b9zVfxr1LHjV/tIDQFQL3+R+TOZwkxZmDZDURloa4WggJUgR5zYWJPgSCAQhRxYBBPkHsBJ7BE9TUEQE7BDpBi0GRsABwkAGGaQdQKUEBgJTAYS8AHMABIADsJAAAwMAalL8BYAAegmFksXgAAAAASUVORK5CYII=";
+            }
+            
+            const qrCode = new QRCodeStyling(qrCodeConfig);
+            
+            qrCode.append(qrDiv);
+            qrWrapper.appendChild(qrDiv);
+            
+            // Add follow section
+            const followSection = document.createElement('div');
+            followSection.className = 'follow-section';
+            
+            const followButton = document.createElement('a');
+            followButton.className = 'follow-button';
+            followButton.href = `https://github.com/${config.githubUsername}`;
+            followButton.target = '_blank';
+            followButton.rel = 'noopener noreferrer';
+            followButton.innerHTML = `
+                <svg height="14" viewBox="0 0 16 16" version="1.1" width="14" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+                Follow Me on GitHub
+            `;
+            
+            followSection.appendChild(followButton);
+            qrWrapper.appendChild(followSection);
+            
+            back.appendChild(qrWrapper);
+            backCard.appendChild(back);
+            
+            // Create back label
+            const backLabel = document.createElement('div');
+            backLabel.className = 'side-label';
+            backLabel.textContent = 'Back';
+            
+            const backWrapper = document.createElement('div');
+            backWrapper.appendChild(backCard);
+            backWrapper.appendChild(backLabel);
+            
+            // Add both cards to container
+            cardContainer.appendChild(frontWrapper);
+            cardContainer.appendChild(backWrapper);
+            
+            loading.style.display = 'none';
+        }
+        
+        // Auto-generate on load
+        window.addEventListener('load', function() {
+            setTimeout(generateCard, 100);
+        });
+    </script>
+</body>
+</html>
